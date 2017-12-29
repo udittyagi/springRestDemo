@@ -1,5 +1,6 @@
 package com.springrestjosh.demo.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 import java.util.Date;

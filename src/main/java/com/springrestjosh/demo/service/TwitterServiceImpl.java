@@ -1,13 +1,19 @@
 package com.springrestjosh.demo.service;
 
+import com.springrestjosh.demo.configuration.TwitterConfiguration;
+import com.springrestjosh.demo.domain.ProfilePhoto;
 import com.springrestjosh.demo.domain.TwitterAccount;
 import com.springrestjosh.demo.domain.User;
 import com.springrestjosh.demo.repository.TwitterRepository;
 import com.springrestjosh.demo.repository.UserRepository;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 
-import java.text.SimpleDateFormat;
+import java.io.*;
 import java.util.*;
 
 @Service
@@ -90,5 +96,50 @@ public class TwitterServiceImpl implements TwitterService {
         user.setTwitterAccount(account);
         userRepository.save(user);
         return twitterRepository.findByAccountName(accountName).get();
+    }
+
+    @Override
+    public void writeUserProfilePhoto(Long accountId, MediaType mediaType, byte[] profilePhotoBytes) {
+        TwitterAccount account = twitterRepository.findOne(accountId);
+        account.setProfilePhotoUploaded(true);
+        account.setProfilePhotoMediaType(mediaType.toString());
+        twitterRepository.save(account);
+
+        ByteArrayInputStream byteArrayInputStream = null;
+        FileOutputStream fileOutputStream = null;
+        try{
+            byteArrayInputStream = new ByteArrayInputStream(profilePhotoBytes);
+            fileOutputStream = new FileOutputStream(fileForPhoto(accountId));
+            IOUtils.copy(byteArrayInputStream,fileOutputStream);
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            IOUtils.closeQuietly(byteArrayInputStream);
+            IOUtils.closeQuietly(fileOutputStream);
+        }
+
+    }
+
+    @Override
+    public ProfilePhoto readUserProfilePhoto(Long accountId) {
+        if(!twitterRepository.findOne(accountId).isProfilePhotoUploaded())
+            return null;
+        FileInputStream inputStream = null;
+        ProfilePhoto photo = new ProfilePhoto();
+        try{
+            inputStream = new FileInputStream(fileForPhoto(accountId));
+            photo.setAccountId(accountId);
+            photo.setMediaType(MediaType.parseMediaType(twitterRepository.findOne(accountId).getProfilePhotoMediaType()));
+            photo.setPhoto(FileCopyUtils.copyToByteArray(inputStream));
+        }catch (IOException e){
+            e.printStackTrace();
+        }finally {
+            IOUtils.closeQuietly(inputStream);
+        }
+        return photo;
+    }
+
+    public File fileForPhoto(Long accountId){
+        return new File(TwitterConfiguration.TWITTER_PROFILE_UPLOAD_DIRECTORY,Long.toString(accountId));
     }
 }

@@ -1,9 +1,5 @@
 package com.springrestjosh.demo.domain;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +13,8 @@ public class TwitterAccount {
     private String accountName;
 
     private boolean profilePhotoUploaded;
+
+    private String profilePhotoMediaType;
 
 
     @ManyToOne(cascade = CascadeType.ALL)
@@ -60,6 +58,15 @@ public class TwitterAccount {
 
     public void setProfilePhotoUploaded(boolean profilePhotoUploaded) {
         this.profilePhotoUploaded = profilePhotoUploaded;
+    }
+
+
+    public String getProfilePhotoMediaType() {
+        return profilePhotoMediaType;
+    }
+
+    public void setProfilePhotoMediaType(String profilePhotoMediaType) {
+        this.profilePhotoMediaType = profilePhotoMediaType;
     }
 
     public User getUser() {
